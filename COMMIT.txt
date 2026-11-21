@@ -1,0 +1,12 @@
+feat(atlas): launch the Atlas map with issue 2026-11-14 (20 pins, 3 patterns)
+
+- engine: D3-geo world map (Natural Earth 1:50m, local file, no tile servers),
+  clustering, card drawer, filters (tag, issue, area, priority, direct/indirect,
+  DIFF, free search), issue timeline with PLAY, pattern cards, stats bar,
+  list view (primary at 390px), issue page, about page, OG images, GoatCounter
+- kit: Hebrew RTL design kit with light/dark themes, term windows,
+  self-hosted Heebo + Frank Ruhl Libre (@fontsource)
+- data: 20 pins from 17 countries; patterns grid-under-strain,
+  single-supplier-leverage, state-sees-late
+- tools: build.mjs (validation + point-in-polygon), og.py, check.py
+  (1280/390, light/dark, file:// and http)

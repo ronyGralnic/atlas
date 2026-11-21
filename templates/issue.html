@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>המשלוח השבועי · {{ISSUE_LABEL}} · {{SITE_NAME}}</title>
+<meta name="description" content="{{ISSUE_DESC}}">
+{{META_COMMON}}
+<meta property="og:title" content="המשלוח השבועי · {{ISSUE_LABEL}} · {{SITE_NAME}}">
+<meta property="og:description" content="{{ISSUE_DESC}}">
+<meta property="og:image" content="{{SITE_URL}}og/{{ISSUE}}.png">
+<meta property="og:url" content="{{SITE_URL}}issue/{{ISSUE}}.html">
+<link rel="stylesheet" href="../assets/css/kit.css">
+<link rel="stylesheet" href="../assets/css/atlas.css">
+<script src="../assets/js/core.js"></script>
+</head>
+<body data-issue="{{ISSUE}}">
+<a class="skip-link" href="#cards">דלג לנעצים</a>
+{{HEADER:issue}}
+<main class="wrap">
+  <header class="issue-hero">
+    <span class="kicker">המשלוח השבועי</span>
+    <h1>{{ISSUE_LABEL}}</h1>
+    <p class="lede" id="issue-lede">{{ISSUE_DESC}}</p>
+    <nav class="issue-toc" id="issue-toc" aria-label="הנעצים בגיליון"></nav>
+  </header>
+  <div id="cards"></div>
+  <p style="margin-top:var(--s-6)"><a class="btn" href="../index.html">← חזרה למפה</a></p>
+</main>
+{{FOOTER}}
+<script src="../data/index.js"></script>
+<script src="../data/pins-{{ISSUE}}.js"></script>
+<script src="../assets/js/issue.js"></script>
+</body>
+</html>

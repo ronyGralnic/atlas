@@ -1,0 +1,5 @@
+node_modules/
+interview/
+.DS_Store
+*.log
+.atlas-forbidden.txt
