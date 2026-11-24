@@ -74,6 +74,7 @@ button,input,select{font:inherit;color:inherit}
 .skip-link:focus{top:var(--s-3)}
 .num{font-variant-numeric:tabular-nums}
 bdi{unicode-bidi:isolate}
+[hidden]{display:none!important}
 
 /* ---------- Header ---------- */
 .site-header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--page) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--hair)}

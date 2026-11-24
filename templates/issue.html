@@ -11,21 +11,24 @@
 <meta property="og:image" content="{{SITE_URL}}og/{{ISSUE}}.png">
 <meta property="og:url" content="{{SITE_URL}}issue/{{ISSUE}}.html">
 <link rel="stylesheet" href="../assets/css/kit.css">
+<link rel="stylesheet" href="../assets/css/scenes.css">
 <link rel="stylesheet" href="../assets/css/atlas.css">
 <script src="../assets/js/core.js"></script>
+<script src="../assets/js/scenes.js"></script>
 </head>
 <body data-issue="{{ISSUE}}">
-<a class="skip-link" href="#cards">דלג לנעצים</a>
+<a class="skip-link" href="#cards">דלגו לסיפורים</a>
 {{HEADER:issue}}
 <main class="wrap">
   <header class="issue-hero">
     <span class="kicker">המשלוח השבועי</span>
     <h1>{{ISSUE_LABEL}}</h1>
-    <p class="lede" id="issue-lede">{{ISSUE_DESC}}</p>
-    <nav class="issue-toc" id="issue-toc" aria-label="הנעצים בגיליון"></nav>
+    <p class="lede">{{ISSUE_DESC}}</p>
+    <div class="faces"><div class="faces__stack" id="faces"></div></div>
+    <nav class="issue-toc" id="issue-toc" aria-label="הסיפורים בגיליון"></nav>
   </header>
   <div id="cards"></div>
-  <p style="margin-top:var(--s-6)"><a class="btn" href="../index.html">← חזרה למפה</a></p>
+  <p style="margin-top:var(--s-6)"><a class="btn" href="../index.html">← חזרה לגלובוס</a></p>
 </main>
 {{FOOTER}}
 <script src="../data/index.js"></script>

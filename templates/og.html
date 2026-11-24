@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>og</title>
 <link rel="stylesheet" href="../assets/css/kit.css">
+<link rel="stylesheet" href="../assets/css/scenes.css">
 <link rel="stylesheet" href="../assets/css/atlas.css">
 <style>
   html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:#f6f5f1}
@@ -15,6 +16,7 @@
   .og__title{font-family:var(--font-display);font-size:44px;font-weight:700;line-height:1.15}
   .og__sub{font-size:24px;color:var(--ink-2);line-height:1.4}
   .og__stats{margin-top:auto;display:flex;gap:28px}
+  .og__faces{display:flex}.og__faces svg{margin-inline-start:-12px;border:3px solid #f6f5f1;border-radius:50%}
   .og__stats b{display:block;font-family:var(--font-display);font-size:48px;line-height:1}
   .og__stats span{font-size:18px;color:var(--ink-2)}
   .og__map{position:relative}
@@ -28,13 +30,14 @@
     <div class="og__kicker" id="kicker"></div>
     <div class="og__title" id="title"></div>
     <div class="og__sub" id="sub"></div>
+    <div class="og__faces" id="faces"></div>
     <div class="og__stats" id="stats"></div>
   </div>
   <div class="og__map"><svg id="m" viewBox="0 0 770 630"></svg></div>
 </div>
 <script src="../assets/js/core.js"></script>
 <script src="../assets/js/vendor.js"></script>
-<script src="../data/world.js"></script>
+<script src="../data/world-110m.js"></script>
 <script src="../data/index.js"></script>
 <script>
 (function () {
@@ -51,24 +54,27 @@
     } else {
       document.getElementById('kicker').textContent = 'מפה שגדלה כל שבוע';
       document.getElementById('title').textContent = idx.site.tagline;
-      document.getElementById('sub').textContent = 'בעיה אחת במקום אחד, ורעיון קונקרטי לפתרון.';
+      document.getElementById('sub').textContent = 'בכל נקודה על הגלובוס, מישהו מחכה.';
     }
     var countries = new Set(pins.map(function (p) { return p.place.country_en; })).size;
-    var diff = pins.filter(function (p) { return p.diff_candidate; }).length;
-    document.getElementById('stats').innerHTML = '<div><b>' + pins.length + '</b><span>נעצים</span></div><div><b>' + countries + '</b><span>מדינות</span></div>' +
-      (issue ? '<div><b>' + diff + '</b><span>מועמדי DIFF</span></div>' : '<div><b>' + idx.patterns.length + '</b><span>דפוסים</span></div>');
-    var land = V.feature(ATLAS_WORLD, ATLAS_WORLD.objects.countries);
-    var proj = V.geoEqualEarth().fitExtent([[10, 40], [760, 600]], land), path = V.geoPath(proj);
+    document.getElementById('stats').innerHTML = '<div><b>' + pins.length + '</b><span>סיפורים</span></div><div><b>' + countries + '</b><span>מדינות</span></div>' +
+      '<div><b>' + idx.patterns.length + '</b><span>דפוסים</span></div>';
+    var land = V.feature(ATLAS_WORLD_110, ATLAS_WORLD_110.objects.countries);
+    var proj = V.geoOrthographic().scale(285).translate([395, 320]).rotate([-30, -22]).clipAngle(90), path = V.geoPath(proj);
     var svg = V.select('#m');
-    svg.append('path').attr('d', path({ type: 'Sphere' })).attr('fill', '#eef1f2');
-    svg.append('g').selectAll('path').data(land.features).enter().append('path').attr('d', path).attr('fill', '#e2dfd6').attr('stroke', '#fcfcfb').attr('stroke-width', .6);
+    svg.append('circle').attr('cx', 395).attr('cy', 320).attr('r', 305).attr('fill', '#bfe0f5').attr('opacity', .5);
+    svg.append('path').attr('d', path({ type: 'Sphere' })).attr('fill', '#9cc5de');
+    svg.append('path').attr('d', path(V.geoGraticule10())).attr('fill', 'none').attr('stroke', 'rgba(255,255,255,.35)');
+    svg.append('g').selectAll('path').data(land.features).enter().append('path').attr('d', path).attr('fill', '#e6e1d3').attr('stroke', '#fffdf7').attr('stroke-width', .6);
     var g = svg.append('g');
     pins.forEach(function (p) {
+      if (V.geoDistance([p.place.lng, p.place.lat], [30, 22]) > 1.5) return;
       var xy = proj([p.place.lng, p.place.lat]), fam = A.famOf(p);
       var n = g.append('g').attr('transform', 'translate(' + xy + ')');
       n.append('circle').attr('r', 12).attr('fill', '#fcfcfb');
       n.append('circle').attr('r', 9).attr('fill', p.indirect ? '#fcfcfb' : 'var(--fam-' + fam + ')').attr('stroke', p.indirect ? 'var(--fam-' + fam + ')' : 'rgba(11,11,11,.55)').attr('stroke-width', p.indirect ? 3 : 1);
     });
+    document.getElementById('faces').innerHTML = pins.slice(0, 8).map(function (p) { return A.avatar(p.persona.avatar, 58); }).join('');
     document.body.setAttribute('data-ready', '1');
   });
 })();

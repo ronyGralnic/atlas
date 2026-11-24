@@ -1,12 +1,19 @@
-feat(atlas): launch the Atlas map with issue 2026-11-14 (20 pins, 3 patterns)
+feat(atlas): living globe, fictional personas and playful exploration
 
-- engine: D3-geo world map (Natural Earth 1:50m, local file, no tile servers),
-  clustering, card drawer, filters (tag, issue, area, priority, direct/indirect,
-  DIFF, free search), issue timeline with PLAY, pattern cards, stats bar,
-  list view (primary at 390px), issue page, about page, OG images, GoatCounter
-- kit: Hebrew RTL design kit with light/dark themes, term windows,
-  self-hosted Heebo + Frank Ruhl Libre (@fontsource)
-- data: 20 pins from 17 countries; patterns grid-under-strain,
-  single-supplier-leverage, state-sees-late
-- tools: build.mjs (validation + point-in-polygon), og.py, check.py
-  (1280/390, light/dark, file:// and http)
+Rework the site after the first round of feedback:
+- globe: auto-rotating orthographic globe (1:110m) with real-time day/night
+  shading and a sky tinted by the reader's local hour; flat 1:50m map kept
+  as a toggle; pulsing pins; click a country to open its window
+- ticker: running "alerts" strip, one problem + one-line idea per story
+- stories: magazine cards with an animated SVG scene per story, flag,
+  fictional persona (avatar, name, role) and the idea teaser
+- card: scene banner, "meet <persona>" story, local time at the place,
+  how the idea changes the persona's day, share link
+- explore: 8 theme tiles with live counts, region pills, search by persona;
+  priority / direct-indirect / DIFF filters removed
+- new windows: country spotlight (flags), "the numbers behind the map"
+- flags next to every country (flag-icons, MIT); patterns show flags + faces
+- about page cut to three steps; no Economist or DIFF mentions in the UI
+- data: persona, hook_he, teaser_he, scene, place.iso2, place.tz;
+  diff_candidate / diff_reason retired; build validates all of it
+- tools: check.py rewritten (668 checks across 8 configurations)

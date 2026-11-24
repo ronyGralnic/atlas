@@ -11,120 +11,104 @@
 <meta property="og:image" content="{{SITE_URL}}og/site.png">
 <meta property="og:url" content="{{SITE_URL}}">
 <link rel="stylesheet" href="assets/css/kit.css">
+<link rel="stylesheet" href="assets/css/scenes.css">
 <link rel="stylesheet" href="assets/css/atlas.css">
 <script src="assets/js/core.js"></script>
+<script src="assets/js/scenes.js"></script>
 </head>
 <body>
-<a class="skip-link" href="#explorer">דלג למפה</a>
+<a class="skip-link" href="#stories">דלגו לסיפורים</a>
 {{HEADER:map}}
+
+<div class="ticker" id="ticker" role="region" aria-label="התראות מהמפה">
+  <span class="ticker__label"><i class="live-dot" aria-hidden="true"></i><span class="t">עכשיו על המפה</span></span>
+  <div class="ticker__viewport"><div class="ticker__track" id="ticker-track"></div></div>
+  <button type="button" class="ticker__pause" id="ticker-pause" aria-pressed="false" aria-label="עצרו את פס ההתראות">
+    <svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg>
+    <svg class="i-play" viewBox="0 0 16 16" aria-hidden="true" style="display:none"><path d="M12 3v10L4 8z" fill="currentColor"/></svg>
+  </button>
+</div>
 
 <main>
   <div class="wrap">
-    <section class="intro" aria-labelledby="intro-h">
-      <div>
-        <h1 id="intro-h">מפה של בעיות אמיתיות, ומה אפשר לבנות</h1>
-        <p>כל נעץ הוא בעיה אחת במקום אחד, מתוך הדיווח השבועי, ולצידה רעיון קונקרטי לפתרון. המפה גדלה כל שבוע.</p>
+    <section class="hero" aria-labelledby="hero-h">
+      <div class="hero__text">
+        <span class="kicker" id="hero-kicker">{{SITE_NAME}}</span>
+        <h1 id="hero-h">בכל נקודה על הגלובוס הזה, <em>מישהו מחכה.</em></h1>
+        <p class="lede">לבעיה שאף אחד עוד לא פתר, ולרעיון שעוד לא נבנה. סובבו את העולם, לחצו על נקודה, ותכירו אותם.</p>
+        <div class="hero__cta">
+          <button type="button" class="btn btn--primary btn--lg" id="surprise"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.5" y="2.5" width="15" height="15" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="7" cy="7" r="1.4" fill="currentColor"/><circle cx="13" cy="13" r="1.4" fill="currentColor"/><circle cx="10" cy="10" r="1.4" fill="currentColor"/></svg>הפתיעו אותי</button>
+          <button type="button" class="btn btn--lg" id="open-countries"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 17V3M4 4h10l-2 3.5L14 11H4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>בחרו מדינה</button>
+          <button type="button" class="btn btn--ghost btn--lg" id="open-stats"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 17h14M5 14V9M10 14V4M15 14v-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>המספרים מאחורי המפה</button>
+        </div>
+        <div class="faces" id="faces"></div>
       </div>
-      <dl class="stats" aria-label="מספרים">
-        <div class="stat"><dt class="stat__k">נעצים</dt><dd class="stat__v" id="s-pins" style="margin:0">–</dd></div>
-        <div class="stat"><dt class="stat__k">מדינות</dt><dd class="stat__v" id="s-countries" style="margin:0">–</dd></div>
-        <div class="stat"><dt class="stat__k">דפוסים</dt><dd class="stat__v" id="s-patterns" style="margin:0">–</dd></div>
-        <div class="stat stat--tag"><dt class="stat__k">התגית המובילה</dt><dd class="stat__v" id="s-tag" style="margin:0">–</dd></div>
-      </dl>
+
+      <div class="stage" id="stage">
+        <div class="stars" aria-hidden="true"></div>
+        <svg class="map" id="map" role="img" aria-label="גלובוס עם נעצים. כל נעץ הוא בעיה במקום אחד בעולם. אותם סיפורים זמינים גם ברשימה שמתחת."></svg>
+        <div class="stage__top">
+          <div class="mode" role="group" aria-label="תצוגת מפה">
+            <button type="button" data-mode="globe" aria-pressed="true">גלובוס</button>
+            <button type="button" data-mode="flat" aria-pressed="false">מפה שטוחה</button>
+          </div>
+          <div class="map-ctrl">
+            <button type="button" class="btn btn--icon" id="spin" aria-pressed="false" aria-label="עצרו את הסיבוב"><svg class="i-pause" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg><svg class="i-play" viewBox="0 0 16 16" aria-hidden="true" style="display:none"><path d="M12 3v10L4 8z" fill="currentColor"/></svg></button>
+            <button type="button" class="btn btn--icon" id="z-in" aria-label="התקרבו">+</button>
+            <button type="button" class="btn btn--icon" id="z-out" aria-label="התרחקו">−</button>
+            <button type="button" class="btn btn--icon" id="z-reset" aria-label="חזרה למבט מלא"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+          </div>
+        </div>
+        <details class="map-legend" id="legend">
+          <summary>מקרא</summary>
+          <ul>{{LEGEND}}</ul>
+        </details>
+        <span class="sunchip" id="sunchip"></span>
+        <div class="map-tip" id="map-tip" hidden></div>
+        <p class="map-empty" id="map-empty" hidden><span>אין נעצים שמתאימים לבחירה</span></p>
+        <div class="timeline" role="group" aria-label="ציר הזמן של הגיליונות">
+          <button type="button" class="btn btn--icon btn--primary" id="tl-play" aria-pressed="false" aria-label="נגנו: איך המפה גדלה">
+            <svg class="i-play" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M12 3v10L4 8z" fill="currentColor"/></svg>
+            <svg class="i-pause" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" style="display:none"><path d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg>
+          </button>
+          <span class="timeline__label" id="tl-label"></span>
+          <input type="range" id="tl-range" aria-label="גיליונות עד">
+        </div>
+      </div>
     </section>
 
-    <div class="explorer" id="explorer">
-      <aside class="filters" id="filters" aria-labelledby="filters-h">
-        <div class="filters__head">
-          <h2 id="filters-h">סינון</h2>
-          <button type="button" class="btn btn--ghost btn--icon filters-toggle" id="filters-close" aria-label="סגור סינון">✕</button>
+    <section class="explore" id="explore" aria-labelledby="explore-h">
+      <div class="explore__head">
+        <h2 id="explore-h">מה מסקרן אתכם?</h2>
+        <div class="explore__status" id="status" aria-live="polite"></div>
+      </div>
+      <div class="tiles" id="tiles" role="group" aria-label="נושאים"></div>
+      <div class="explore__row">
+        <div class="pills" id="areas" role="group" aria-label="אזורים בעולם"></div>
+        <label class="search"><span class="visually-hidden">חיפוש</span>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <input id="q" type="search" placeholder="חפשו: מים, יפן, חשמל, נמל…" autocomplete="off">
+        </label>
+        <select class="select" id="f-issue" aria-label="גיליון" hidden></select>
+        <div class="pattern-banner" id="pattern-banner" hidden>
+          <span id="pattern-banner-text"></span>
+          <button type="button" class="btn btn--ghost btn--icon" id="pattern-clear" aria-label="בטלו את הדגשת הדפוס">✕</button>
         </div>
-        <div class="field">
-          <label for="f-q">חיפוש חופשי</label>
-          <input class="input" id="f-q" type="search" placeholder="מדינה, נושא, מילה…" autocomplete="off">
-        </div>
-        <div class="field">
-          <span class="label" id="f-tags-l">תגיות</span>
-          <div id="f-tags" role="group" aria-labelledby="f-tags-l"></div>
-        </div>
-        <div class="field">
-          <label for="f-issue">גיליון</label>
-          <select class="select" id="f-issue"></select>
-        </div>
-        <div class="field">
-          <label for="f-area">אזור</label>
-          <select class="select" id="f-area"></select>
-        </div>
-        <div class="field">
-          <span class="label" id="f-prio-l">עדיפות</span>
-          <div class="chips" id="f-prio" role="group" aria-labelledby="f-prio-l">
-            <button type="button" class="chip" data-prio="A" aria-pressed="false">A</button>
-            <button type="button" class="chip" data-prio="B" aria-pressed="false">B</button>
-            <button type="button" class="chip" data-prio="C" aria-pressed="false">C</button>
-          </div>
-        </div>
-        <div class="field">
-          <span class="label" id="f-mode-l">סוג הקשר</span>
-          <div class="seg" id="f-mode" role="group" aria-labelledby="f-mode-l">
-            <button type="button" data-mode="all" aria-pressed="true">הכל</button>
-            <button type="button" data-mode="direct" aria-pressed="false">ישיר</button>
-            <button type="button" data-mode="indirect" aria-pressed="false">עקיף</button>
-          </div>
-        </div>
-        <label class="check"><input type="checkbox" id="f-diff"> רק מועמדים ל-DIFF ★</label>
-        <div class="filters__head">
-          <span class="result-count" id="result-count" aria-live="polite"></span>
-          <button type="button" class="btn btn--ghost" id="f-reset">נקה</button>
-        </div>
-      </aside>
+      </div>
+    </section>
 
-      <section class="stage" id="stage" data-view="map" aria-label="המפה והנעצים">
-        <div class="stage__bar">
-          <div class="tabs" id="view-tabs" role="tablist" aria-label="תצוגה">
-            <button type="button" role="tab" data-view="map" aria-selected="true">מפה</button>
-            <button type="button" role="tab" data-view="list" aria-selected="false">רשימה</button>
-          </div>
-          <button type="button" class="btn filters-toggle" id="filters-toggle" aria-expanded="false" aria-controls="filters">סינון<span id="filters-count"></span></button>
-          <div class="pattern-banner" id="pattern-banner" hidden>
-            <span id="pattern-banner-text"></span>
-            <button type="button" class="btn btn--ghost btn--icon" id="pattern-clear" aria-label="בטל הדגשת דפוס">✕</button>
-          </div>
-        </div>
-
-        <div class="mapwrap">
-          <div class="mapbox" id="mapbox">
-            <svg id="map" role="img" aria-label="מפת עולם עם נעצים. לחיצה על נעץ פותחת את הכרטיס שלו. אותו מידע זמין גם בתצוגת הרשימה."></svg>
-            <div class="map-ctrl">
-              <button type="button" class="btn btn--icon" id="z-in" aria-label="התקרב">+</button>
-              <button type="button" class="btn btn--icon" id="z-out" aria-label="התרחק">−</button>
-              <button type="button" class="btn btn--icon" id="z-reset" aria-label="חזרה למבט עולמי"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
-            </div>
-            <details class="map-legend" id="legend">
-              <summary>מקרא</summary>
-              <ul>{{LEGEND}}</ul>
-            </details>
-            <span class="map-hint">גלגלת או צביטה לזום · גרירה להזזה</span>
-            <div class="map-tip" id="map-tip" hidden></div>
-            <p class="map-empty" id="map-empty" hidden>אין נעצים שמתאימים לסינון</p>
-          </div>
-          <div class="timeline" role="group" aria-label="ציר זמן של הגיליונות">
-            <button type="button" class="btn btn--icon btn--primary" id="tl-play" aria-pressed="false" aria-label="נגן: הצג איך המפה גדלה">
-              <svg class="i-play" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M12 3v10L4 8z" fill="currentColor"/></svg>
-              <svg class="i-pause" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" style="display:none"><path d="M4 3h3v10H4zM9 3h3v10H9z" fill="currentColor"/></svg>
-            </button>
-            <span class="timeline__label" id="tl-label"></span>
-            <input type="range" id="tl-range" aria-label="גיליונות עד">
-          </div>
-        </div>
-
-        <div class="list" id="list" aria-label="רשימת הנעצים"></div>
-      </section>
-    </div>
+    <section class="stories" id="stories" aria-labelledby="stories-h">
+      <div class="section__head">
+        <h2 id="stories-h">הסיפורים</h2>
+        <p>כל כרטיס הוא אדם, מקום, ורעיון אחד.</p>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
 
     <section class="section" id="patterns" aria-labelledby="patterns-h">
       <div class="section__head">
-        <h2 id="patterns-h">דפוסים</h2>
-        <p>אותה בעיה בשלושה מקומות או יותר. לחיצה על כרטיס מאירה את הנעצים שלו.</p>
+        <h2 id="patterns-h">דפוסים: אותה בעיה, מדינות שונות</h2>
+        <p>לחיצה על כרטיס מאירה את המקומות על הגלובוס.</p>
       </div>
       <div class="patterns" id="patterns-list"></div>
     </section>
@@ -132,7 +116,7 @@
     <section class="section" id="issues" aria-labelledby="issues-h">
       <div class="section__head">
         <h2 id="issues-h">המשלוח השבועי</h2>
-        <p>כל הנעצים של גיליון אחד בעמוד אחד.</p>
+        <p>כל הסיפורים של שבוע אחד בעמוד אחד.</p>
       </div>
       <div class="issues" id="issues-list"></div>
     </section>
@@ -140,17 +124,29 @@
 </main>
 
 <div class="scrim" id="scrim" hidden></div>
-<aside class="drawer" id="drawer" aria-label="כרטיס נעץ">
+<aside class="drawer" id="drawer" aria-label="סיפור">
   <div class="drawer__bar">
-    <span class="crumb" id="drawer-crumb"></span>
-    <button type="button" class="btn btn--icon" id="drawer-close" aria-label="סגור כרטיס">✕</button>
+    <button type="button" class="btn btn--icon" id="drawer-close" aria-label="סגרו את הסיפור">✕</button>
+    <span class="spacer"></span>
+    <span class="copied" id="copied" hidden role="status">הקישור הועתק</span>
+    <button type="button" class="btn" id="share"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8 12l4-4M7 9.5 5 11.5a2.5 2.5 0 0 0 3.5 3.5l2-2M13 10.5l2-2A2.5 2.5 0 0 0 11.5 5l-2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>שתפו</button>
   </div>
   <div class="drawer__body" id="drawer-body"></div>
 </aside>
 
+<dialog class="dlg" id="dlg-country" aria-labelledby="dlg-country-h">
+  <div class="dlg__bar"><button type="button" class="btn btn--icon" id="country-back" aria-label="כל המדינות" hidden>→</button><h2 id="dlg-country-h">בחרו מדינה</h2><button type="button" class="btn btn--icon" data-close aria-label="סגירה">✕</button></div>
+  <div class="dlg__body" id="country-body"></div>
+</dialog>
+<dialog class="dlg" id="dlg-stats" aria-labelledby="dlg-stats-h">
+  <div class="dlg__bar"><h2 id="dlg-stats-h">המספרים מאחורי המפה</h2><button type="button" class="btn btn--icon" data-close aria-label="סגירה">✕</button></div>
+  <div class="dlg__body" id="stats-body"></div>
+</dialog>
+
 {{FOOTER}}
 <script src="assets/js/vendor.js"></script>
 <script src="data/world.js"></script>
+<script src="data/world-110m.js"></script>
 <script src="data/index.js"></script>
 <script src="assets/js/app.js"></script>
 </body>

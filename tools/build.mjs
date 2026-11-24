@@ -31,6 +31,7 @@ function loadCore() {
   ctx.addEventListener = noop;
   vm.createContext(ctx);
   vm.runInContext(read('assets/js/core.js').replace(/\bwindow\.addEventListener/g, 'addEventListener'), ctx);
+  vm.runInContext(read('assets/js/scenes.js'), ctx);
   return ctx.window.Atlas;
 }
 const A = loadCore();
@@ -93,7 +94,10 @@ const world = JSON.parse(read('data/world.js').replace(/^[\s\S]*?window\.ATLAS_W
 const countries = topo.feature(world, world.objects.countries).features;
 const SCALES = ['local', 'national', 'regional', 'global'];
 const REQUIRED = ['id', 'issue_date', 'scale', 'title_he', 'problem_he', 'who_hurts', 'who_gains', 'why_now', 'idea_he', 'must_be_true', 'priority', 'source'];
-const TEXT = ['title_he', 'problem_he', 'who_hurts', 'who_gains', 'why_now', 'idea_he', 'must_be_true', 'indirect_note', 'diff_reason'];
+const TEXT = ['title_he', 'problem_he', 'who_hurts', 'who_gains', 'why_now', 'idea_he', 'must_be_true', 'indirect_note'];
+const HAIR = ['short', 'long', 'bob', 'bun', 'pony', 'curly', 'afro', 'wavy', 'cap', 'scarf', 'wrap'];
+const ACC = ['none', 'glasses', 'helmet', 'headset', 'beard', 'apron'];
+const FLAG_SRC = (() => { try { return path.join(path.dirname(require.resolve('flag-icons/package.json')), 'flags', '4x3'); } catch (e) { return null; } })();
 // private word list (gitignored): one word per line
 const FORBIDDEN = fs.existsSync(rel('.atlas-forbidden.txt')) ? read('.atlas-forbidden.txt').split('\n').map((w) => w.trim()).filter(Boolean) : [];
 const seen = new Set();
@@ -108,13 +112,34 @@ for (const p of db.pins) {
   if (!Array.isArray(p.tags) || p.tags.length < 1 || p.tags.length > 3) errors.push(`${at} needs 1–3 tags`);
   for (const t of p.tags || []) if (!A.TAGS.includes(t)) errors.push(`${at} tag not in closed list: ${t}`);
   if (p.indirect && !p.indirect_note) errors.push(`${at} indirect pin needs indirect_note`);
-  if (p.diff_candidate && !p.diff_reason) errors.push(`${at} DIFF candidate needs diff_reason`);
+  if ('diff_candidate' in p || 'diff_reason' in p) errors.push(`${at} DIFF fields were retired (feedback 2026-11-24) — remove diff_candidate/diff_reason`);
+  // persona, ticker, scene, flag, time zone
+  const pe = p.persona || {};
+  for (const f of ['name', 'role', 'home', 'story', 'after']) if (!pe[f]) errors.push(`${at} persona.${f} missing`);
+  if (typeof pe.age !== 'number') errors.push(`${at} persona.age must be a number`);
+  const av = pe.avatar || {};
+  if (!(av.skin >= 1 && av.skin <= 6)) errors.push(`${at} persona.avatar.skin must be 1–6`);
+  if (!HAIR.includes(av.hair)) errors.push(`${at} persona.avatar.hair must be one of ${HAIR.join('/')}`);
+  if (av.acc && !ACC.includes(av.acc)) errors.push(`${at} persona.avatar.acc must be one of ${ACC.join('/')}`);
+  if ((pe.story || '').split(/(?<=[.!?])\s+/).length > 4) warnings.push(`${at} persona.story is long (keep it to 2–3 sentences)`);
+  if (!p.hook_he) errors.push(`${at} hook_he (ticker line) missing`);
+  else if (p.hook_he.split(/\s+/).length > 16) errors.push(`${at} hook_he is ${p.hook_he.split(/\s+/).length} words (max 16)`);
+  if (!p.teaser_he) errors.push(`${at} teaser_he missing`);
+  else if (p.teaser_he.split(/\s+/).length > 8) errors.push(`${at} teaser_he is ${p.teaser_he.split(/\s+/).length} words (max 8)`);
+  if (!A.SCENES.includes(p.scene)) errors.push(`${at} scene "${p.scene}" not in assets/js/scenes.js (${A.SCENES.join(', ')})`);
+  const iso2 = (p.place || {}).iso2;
+  if (!/^[a-z]{2}$/.test(iso2 || '')) errors.push(`${at} place.iso2 missing or not lowercase alpha-2`);
+  else if (!fs.existsSync(rel('assets/flags', iso2 + '.svg'))) {
+    if (FLAG_SRC && fs.existsSync(path.join(FLAG_SRC, iso2 + '.svg'))) { fs.mkdirSync(rel('assets/flags'), { recursive: true }); fs.copyFileSync(path.join(FLAG_SRC, iso2 + '.svg'), rel('assets/flags', iso2 + '.svg')); console.log(`  + flag ${iso2}.svg`); }
+    else errors.push(`${at} no flag for ${iso2} (run npm install to get flag-icons)`);
+  }
+  try { new Intl.DateTimeFormat('en', { timeZone: (p.place || {}).tz }); if (!(p.place || {}).tz) throw 0; } catch (e) { errors.push(`${at} place.tz must be an IANA time zone`); }
   const words = p.title_he.trim().split(/\s+/).length;
   if (words > 8) errors.push(`${at} title is ${words} words (max 8)`);
-  const all = TEXT.map((f) => p[f] || '').join(' \n ') + ' ' + (p.terms || []).map((t) => t.d).join(' ');
+  const all = TEXT.map((f) => p[f] || '').join(' \n ') + ' ' + (p.terms || []).map((t) => t.d).join(' ') + ' ' + [p.hook_he, p.teaser_he, pe.story, pe.after, pe.role].join(' ');
   if (/(^|[^א-ת])(ה?כתב(ה|ות|תו|תה))(?![א-ת])/.test(all)) errors.push(`${at} uses the word "כתבה" — use "הסיפור" / "הדיווח"`);
   for (const w of FORBIDDEN) if (all.includes(w)) errors.push(`${at} contains a word from .atlas-forbidden.txt: ${w}`);
-  const q = (all.match(/[“”"]/g) || []).length / 2;
+  const q = (TEXT.map((f) => p[f] || '').join(' ').match(/[“”"]/g) || []).length / 2;
   quotesByIssue[p.issue_date] = (quotesByIssue[p.issue_date] || 0) + q;
   const cardText = TEXT.map((f) => p[f] || '').join(' ');
   for (const t of p.terms || []) if (!cardText.includes(t.t)) errors.push(`${at} term "${t.t}" does not appear in the card text`);
@@ -137,6 +162,7 @@ for (const pt of db.patterns) {
   for (const m of pt.members) if (!byId[m]) errors.push(`pattern ${pt.id}: member not found ${m}`);
   const n = new Set(pt.members.map((m) => byId[m] && byId[m].place.country_en)).size;
   if (n < 3) errors.push(`pattern ${pt.id}: only ${n} places (a pattern needs 3+)`);
+  if ('diff_candidate' in pt) delete pt.diff_candidate;
 }
 warnings.forEach((w) => console.warn('warn ' + w));
 if (errors.length) {
@@ -161,13 +187,12 @@ write('data/index.js', `/* Atlas index. Generated by tools/build.mjs. */\nwindow
 
 /* ---- Pages ---- */
 const site = db.site;
-const legend = A.FAMILIES.map((f) => `<li>${A.swatch(f.id)}<span><b>${A.esc(f.name)}</b><br>${f.tags.map(A.esc).join(' · ')}</span></li>`).join('') +
-  `<li><span class="fam-swatch" style="--fam:var(--fam-1);background:var(--pin-ring);border:2.5px solid var(--fam-1);outline:1px dashed var(--pin-edge);outline-offset:1px"></span><span><b>נעץ חלול</b> = קשר עקיף</span></li>` +
-  `<li><span class="fam-swatch" style="--fam:var(--ink-1);font-size:13px;color:var(--page)">★</span><span><b>כוכב</b> = מועמד ל-DIFF</span></li>` +
-  `<li><span class="fam-swatch" style="--fam:var(--ink-1);color:var(--page);font-size:10px;font-weight:700">3</span><span><b>עיגול עם מספר</b> = כמה נעצים קרובים</span></li>`;
+const legend = A.FAMILIES.map((f) => `<li>${A.swatch(f.id)}<span><b>${A.esc(f.name)}</b> · ${f.tags.map(A.esc).join(' · ')}</span></li>`).join('') +
+  `<li><span class="fam-swatch" style="--fam:var(--fam-1);background:var(--pin-ring);border:2.5px solid var(--fam-1);outline:1px dashed var(--pin-edge);outline-offset:1px"></span><span><b>נעץ חלול</b> · קשר עקיף</span></li>` +
+  `<li><span class="fam-swatch" style="--fam:var(--ink-1);color:var(--page);font-size:10px;font-weight:700">3</span><span><b>עיגול עם מספר</b> · כמה סיפורים קרובים</span></li>`;
 
 function header(active, base) {
-  const nav = [['map', 'index.html', 'מפה'], ['patterns', 'index.html#patterns', 'דפוסים'], ['issues', 'index.html#issues', 'גיליונות'], ['about', 'about.html', 'אודות']];
+  const nav = [['map', 'index.html', 'גלובוס'], ['stories', 'index.html#stories', 'סיפורים'], ['patterns', 'index.html#patterns', 'דפוסים'], ['about', 'about.html', 'אודות']];
   return `<header class="site-header"><div class="site-header__in">
   <a class="brand" href="${base}index.html"><span class="brand__mark">${A.esc(site.name)}</span><span class="brand__tag">${A.esc(site.tagline)}</span></a>
   <nav class="site-nav" aria-label="ניווט ראשי">${nav.map(([k, h, t]) => `<a href="${base}${h}"${k === active ? ' aria-current="page"' : ''}>${t}</a>`).join('')}</nav>
@@ -176,8 +201,8 @@ function header(active, base) {
 }
 function footer(base) {
   return `<footer class="site-footer"><div class="site-footer__in">
-  <span>${A.esc(site.name)} · הסיכומים מבוססים על דיווח ב-The Economist ונכתבו מחדש בעברית.</span>
-  <span><a href="${base}about.html">איך קוראים נעץ</a> · עודכן ${dateHe(db.issues.length ? db.issues[db.issues.length - 1].issue : built.slice(0, 10))}</span>
+  <span>${A.esc(site.name)} · הדמויות בדויות, הבעיות אמיתיות.</span>
+  <span><a href="${base}about.html">איך זה עובד</a> · עודכן ${dateHe(db.issues.length ? db.issues[db.issues.length - 1].issue : built.slice(0, 10))}</span>
 </div></footer>`;
 }
 const FAVICON = `<link rel="icon" href="data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" fill="#1a1a19"/><path d="M16 6c-4 0-7 3-7 7 0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z" fill="#f0916a"/><circle cx="16" cy="13" r="2.6" fill="#1a1a19"/></svg>')}">`;
@@ -200,8 +225,7 @@ write('index.html', fill(read('templates/index.html'), {}, ''));
 write('about.html', fill(read('templates/about.html'), {}, ''));
 for (const i of issuesOut) {
   const ps = db.pins.filter((p) => p.issue_date === i.issue);
-  const nDiff = ps.filter((p) => p.diff_candidate).length;
-  const desc = `${i.count} נעצים מ-${i.countries} מדינות${nDiff ? `, ${nDiff} מועמדים ל-DIFF` : ''}. כל בעיה במקומה, ומה אפשר לבנות.`;
+  const desc = `${i.count} אנשים ב-${i.countries} מדינות, ${i.count} בעיות ו-${i.count} רעיונות שעוד לא נבנו.`;
   write(`issue/${i.issue}.html`, fill(read('templates/issue.html'), { ISSUE: i.issue, ISSUE_LABEL: A.esc(i.label), ISSUE_DESC: A.esc(desc) }, '../'));
 }
 
